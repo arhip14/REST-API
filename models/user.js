@@ -20,7 +20,8 @@ const userSchema = new Schema({
     enum: ["starter", "pro", "business"],
     default: "starter"
   },
-  token: String
+  token: String,
+  avatarURL: String,
 }, {versionKey: false, timestamps: true});
 
 userSchema.post("save", handleMongooseError);
@@ -47,3 +48,5 @@ module.exports = {
     User,
     schemas,
 }
+
+
