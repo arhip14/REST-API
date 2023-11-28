@@ -5,17 +5,17 @@ const path = require("path");
 const fs = require("fs/promises");
 const Jimp = require("jimp"); 
 
-const {User} = require("../models/user");
+const { User } = require("../models/user");
 const { HttpError, ctrlWrapper } = require("../helpers");
 
 const { SECRET_KEY } = process.env;
-const avatarsDir = path.join(__dirname, "../", "public", "avatars")
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 
-const register = async(req, res)=> {
-    const {email, password} = req.body;
-    const user = await User.findOne({email});
+const register = async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
-    if(user){
+    if (user) {
         throw HttpError(409, "Email already in use");
     }
 
@@ -26,8 +26,8 @@ const register = async(req, res)=> {
     res.status(201).json({
         email: newUser.email,
         name: newUser.name,
-    })
-}
+    });
+};
 const login = async(req, res)=> {
     const {email, password} = req.body;
     const user = await User.findOne({email});
@@ -69,26 +69,32 @@ const logout = async(req, res) => {
     })
 }
 
-const updateAvatar = async(req, res)=> {
-    const {_id} = req.user;
-    const {path: tempUpload, originalname} = req.file;
+const updateAvatar = async (req, res) => {
+    const { _id } = req.user;
+    if (!req.body.avatar) {
+        throw new HttpError(400, "Avatar is required");
+    }
+
+    const { path: tempUpload, originalname } = req.body.avatar;
     const filename = `${_id}_${originalname}`;
     const resultUpload = path.join(avatarsDir, filename);
+    
     await fs.rename(tempUpload, resultUpload);
     const avatarURL = path.join("avatars", filename);
+
     await User.findByIdAndUpdate(_id, {avatarURL});
+
     const image = await Jimp.read(tempUpload);
     await image.resize(250, 250).write(resultUpload);
 
     res.json({
         avatarURL,
-    })
-}
-
+    });
+};
 module.exports = {
     register: ctrlWrapper(register),
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent),
     logout: ctrlWrapper(logout),
     updateAvatar: ctrlWrapper(updateAvatar),
-}
+};
