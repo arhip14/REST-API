@@ -1,6 +1,7 @@
-const { Schema, model } = require("mongoose");
+const {Schema, model} = require("mongoose");
 const Joi = require("joi");
-const { handleMongooseError } = require("../helpers");
+
+const {handleMongooseError} = require("../helpers");
 
 const emailRegexp = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 
@@ -29,29 +30,22 @@ const registerSchema = Joi.object({
     name: Joi.string().required(),
     email: Joi.string().pattern(emailRegexp).required(),
     password: Joi.string().min(6).required(),
-});
+})
 
 const loginSchema = Joi.object({
     email: Joi.string().pattern(emailRegexp).required(),
     password: Joi.string().min(6).required(),
-});
-
-const updateAvatarSchema = Joi.object({
-    avatar: Joi.object({
-        path: Joi.string().required(),
-        originalname: Joi.string().required(),
-    }).required(),
-});
+})
 
 const schemas = {
     registerSchema,
     loginSchema,
-    updateAvatarSchema,
-};
+}
 
 const User = model("user", userSchema);
 
 module.exports = {
     User,
     schemas,
-};
+}
+
