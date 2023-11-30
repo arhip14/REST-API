@@ -1,8 +1,12 @@
-const { Contact, schemas } = require("../models/contact");
+const { Contact } = require("../models/contact");
 const { HttpError, ctrlWrapper } = require("../helpers");
 
 const listContacts = async (req, res) => {
-  const result = await Contact.find({}, "-createdAt -updatedAt");
+  const { _id: owner } = req.user;
+  const { page = 1, limit = 10 } = req.query
+  const skip = (page - 1) * limit;
+  // console.log(req.query)
+  const result = await Contact.find({ owner }, "-createdAt -updatedAt", { skip, limit}).populate("owner");
   res.json(result);
 };
 
@@ -15,55 +19,41 @@ const getContactById = async (req, res) => {
   res.json(result);
 };
 
-const addContact = async (req, res) => {
-  const validationResult = schemas.addSchema.validate(req.body);
-  if (validationResult.error) {
-    return res.status(400).json({ message: validationResult.error.details[0].message });
-  }
-
-  const result = await Contact.create(req.body);
+const addContact = async (req, res) => {  
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner });
   res.status(201).json(result);
-};
+    // const result = await Contact.create(req.body);
+    // res.status(201).json(result);
+}
 
 const updateContact = async (req, res) => {
-  const validationResult = schemas.updateFavoriteSchema.validate(req.body);
-  if (validationResult.error) {
-    return res.status(400).json({ message: validationResult.error.details[0].message });
-  }
-
-  const { id } = req.params;
-  const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
-  if (!result) {
-    throw HttpError(404, "Not found");
-  }
-  res.json(result);
+    const { id } = req.params;
+    const result = await Contact.findByIdAndUpdate(id, req.body, {new: true});
+    if (!result) {
+        throw HttpError(404, "Not found");
+    }
+    res.json(result);
 };
 
 const removeContact = async (req, res) => {
-  const { id } = req.params;
-  const result = await Contact.findByIdAndDelete(id);
-  if (!result) {
-    throw HttpError(404, "Not found");
-  }
-  res.json({
-    message: "Delete success",
-  });
+    const { id } = req.params;
+    const result = await Contact.findByIdAndRemove(id);
+    if (!result) {
+        throw HttpError(404, "Not found");
+    }
+    res.json({
+        message: "Delete success"
+    })
 };
 
 const favorite = async (req, res) => {
-  const { id } = req.params;
-  const validationResult = schemas.updateFavoriteSchema.validate(req.body);
-  if (validationResult.error) {
-    return res.status(400).json({ message: validationResult.error.details[0].message });
-  }
-
-  const result = await Contact.findByIdAndUpdate(id, req.body, { new: true });
-
-  if (!result) {
-    return res.status(404).json({ message: "Not found" });
-  }
-
-  res.json(result);
+    const { id } = req.params;
+    const result = await Contact.findByIdAndUpdate(id, req.body, {new: true});
+    if (!result) {
+        throw HttpError(404, "Not found");
+    }
+    res.json(result);
 };
 
 module.exports = {
@@ -74,3 +64,5 @@ module.exports = {
   removeContact: ctrlWrapper(removeContact),
   favorite: ctrlWrapper(favorite),
 };
+
+

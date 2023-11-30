@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 
 
 const Joi = require("joi");
-const {handleMongooseError} = require("../middlewares");
+const {handleMongooseError} = require("../helpers");
 
 const contactSchema = new Schema({
   name: {
@@ -19,6 +19,10 @@ const contactSchema = new Schema({
     type: Boolean,
     default: false,
   },
+owner: {
+      type: Schema.Types.ObjectId,
+      ref: 'user',
+    }
 }, { versionKey: false, timestamps: true });
 
 contactSchema.post("save", handleMongooseError);
@@ -39,3 +43,4 @@ const schemas = {
 const Contact = model("Contact", contactSchema);
 
 module.exports = { Contact , schemas};
+
